@@ -8,3 +8,5 @@ export const run = async () => {
   }
   console.log('Test run finished');
 };
+
+export const it = (name, body) => body();
