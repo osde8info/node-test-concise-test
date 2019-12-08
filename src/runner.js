@@ -26,15 +26,19 @@ export const run = async () => {
 const indent = message =>
   `${' '.repeat(describeStack.length * 2)}${message}`;
 
+const invokeAll = fnArray => fnArray.forEach(fn => fn());
+
 const invokeBefores = () =>
-  describeStack
-    .flatMap(describe => describe.befores)
-    .forEach(before => before());
+  invokeAll(describeStack.flatMap(describe => describe.befores))
+
+const invokeAfters = () =>
+  invokeAll(describeStack.flatMap(describe => describe.afters))
 
 export const it = (name, body) => {
   try {
     invokeBefores();
     body();
+    invokeAfters();
     console.log(indent(color(`<green>✓</green> ${name}`)));
     successes++;
   } catch (e) {
@@ -74,13 +78,29 @@ export const describe = (name, body) => {
 
 const last = arr => arr[arr.length - 1];
 
-export const beforeEach = body => {
-  const newDescribe = {
-    ...last(describeStack),
-    befores: [...last(describeStack).befores, body]
-  };
+const replaceLast = (array, replacement) =>
+  [ ...withoutLast(array), replacement ];
 
+const appendToArrayProp = (object, prop, item) => ({
+  ...object,
+  [prop]: [...object[prop], item]
+})
+
+const currentDescribe = () =>
+  last(describeStack);
+
+const updateDescribe = newProps => {
+  const newDescribe = {
+    ...currentDescribe(),
+    ...newProps
+  };
   describeStack = [
-    ...withoutLast(describeStack), newDescribe
+    ...withoutLast(describeStack),
+    newDescribe
   ];
-};
+}
+export const beforeEach = body =>
+  updateDescribe({ befores: [...currentDescribe().befores, body] });
+
+export const afterEach = body =>
+  updateDescribe({ afters: [...currentDescribe().afters, body] });
