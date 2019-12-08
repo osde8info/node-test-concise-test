@@ -78,14 +78,6 @@ export const describe = (name, body) => {
 
 const last = arr => arr[arr.length - 1];
 
-const replaceLast = (array, replacement) =>
-  [ ...withoutLast(array), replacement ];
-
-const appendToArrayProp = (object, prop, item) => ({
-  ...object,
-  [prop]: [...object[prop], item]
-})
-
 const currentDescribe = () =>
   last(describeStack);
 
