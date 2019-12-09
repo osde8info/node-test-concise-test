@@ -1,5 +1,6 @@
 import path from 'path';
 import { color } from './colors.js';
+import * as matchers from './matchers.js';
 
 let successes = 0;
 let failures = [];
@@ -96,3 +97,10 @@ export const beforeEach = body =>
 
 export const afterEach = body =>
   updateDescribe({ afters: [...currentDescribe().afters, body] });
+
+const matcherHandler = actual => ({
+  get: (_, name) => (...args) => matchers[name](actual, ...args)
+});
+
+export const expect = actual =>
+  new Proxy({}, matcherHandler(actual));
