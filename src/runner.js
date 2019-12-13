@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import vm from 'vm';
 import { color } from './colors.js';
 import * as matchers from './matchers.js';
 import { ExpectationError } from "./ExpectationError.js";
@@ -16,7 +17,7 @@ const exitCodes = {
 };
 
 const isSingleFileMode = () =>
-  process.argv[2];
+  process.argv[2] && !process.argv[2].startsWith("-");
 
 const getSingleFilePath = async () => {
   const filePathArg = process.argv[2];
@@ -30,36 +31,88 @@ const getSingleFilePath = async () => {
   }
 };
 
-const discoverTestFiles = async () => {
+const fileMatcherRegex = new RegExp('.tests.js$');
+
+const discoverAllFiles = async () => {
   const testDir = path.resolve(process.cwd(), 'test');
   const dir = await fs.promises.opendir(testDir);
   let testFilePaths = [];
   for await (const dirent of dir) {
-    if (dirent.name.endsWith(".tests.js")) {
-      const fullPath = path.resolve(dir.path, dirent.name);
+    const fullPath = path.resolve(dir.path, dirent.name);
+    if (fullPath.match(fileMatcherRegex)) {
       testFilePaths.push(fullPath);
     }
   }
   return testFilePaths;
 };
 
-const chooseTestFiles = () =>
-  isSingleFileMode() ? getSingleFilePath() : discoverTestFiles();
+const getWatchPath = filePath =>
+  filePath || process.cwd();
 
-export const run = async () => {
-  try {
-    const testFilePaths = await chooseTestFiles();
-    await Promise.all(testFilePaths.map(async testFilePath => {
-      await import(testFilePath);
+const isWatchMode = () =>
+  last(process.argv) === "-w";
+
+const buildRunnerParameters = async () => {
+  const singleFilePath = isSingleFileMode() && await getSingleFilePath();
+  const watchParameters = {
+    watchPath: isWatchMode() && getWatchPath(singleFilePath)
+  };
+  const fileParameters = {
+    initialFileSet: singleFilePath ? [singleFilePath] : await discoverAllFiles(),
+    fileMatcher: singleFilePath ? new RegExp(`/^${singleFilePath}$`) : fileMatcherRegex
+  }
+  return { ...watchParameters, ...fileParameters };
+};
+
+const runOnce = async ({ initialFileSet, fileMatcher }) => {
+  describeStack = [];
+  successes = 0;
+  failures = [];
+  currentTest = null;
+
+  try{
+    await Promise.all(initialFileSet.map(testFilePath => {
+      const withQueryString = `${testFilePath}?query=date`;
+      import(testFilePath)
     }));
   } catch(e) {
     console.error(e);
   }
+
   printFailures();
   console.log(color(
     `<green>${successes}</green> tests passed, ` +
     `<red>${failures.length}</red> tests failed.`));
+}
+
+const buildSingleRunner = async parameters => {
+  await runOnce(parameters);
   process.exit(failures.length > 0 ? exitCodes.failures : exitCodes.ok);
+};
+
+const buildWatcherRunner = async ({ watchPath, initialFileSet, fileMatcher }) => {
+  fs.watch(watchPath, { encoding: 'utf8', recursive: true }, async (eventType, filename) => {
+    const fullPath = path.resolve(watchPath, filename);
+    if (fullPath.match(fileMatcher)) {
+      await runOnce({ initialFileSet: [fullPath], fileMatcher });
+    }
+  });
+
+  await runOnce({ initialFileSet, fileMatcher });
+
+  process.stdin.resume();
+  process.on('SIGINT', () => {
+    process.exit();
+  });
+};
+
+export const run = async () => {
+  const parameters = await buildRunnerParameters();
+  if (parameters.watchPath) {
+    await buildWatcherRunner(parameters);
+  } else {
+    await buildSingleRunner(parameters);
+  }
 };
 
 const indent = message =>
