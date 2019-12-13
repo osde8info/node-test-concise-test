@@ -18,6 +18,6 @@
   "type": "module",
   "bin": "./src/cli",
   "exports": {
-    ".": "./src/runner.js"
+    ".": "./src/testContext.js"
   }
 }
