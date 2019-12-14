@@ -1,6 +1,7 @@
 import { color } from "./colors.js";
 import * as expectModule from "./expect.js";
 import { focusedOnly } from "./focus.js";
+import { TestTimeoutError } from "./TestTimeoutError.js";
 
 export const expect = expectModule.expect;
 
@@ -30,7 +31,11 @@ export const describe = (name, body) =>
   describeWithOpts(name, body, {});
 
 const makeTest = (name, body, options) => ({
-  name, body, ...options, errors: []
+  name,
+  body,
+  ...options,
+  errors: [],
+  timeoutError: new TestTimeoutError(5000)
 });
 
 const itWithOpts = (name, body, options) => {
@@ -91,12 +96,18 @@ const runDescribe = async describe => {
 let successes = 0;
 let failures = [];
 
-const runBodyAndWait = async body => {
+const timeoutPromise = () =>
+  currentTest.timeoutError.createTimeoutPromise();
+
+const runBodyAndWait = async (body) => {
   const result = body();
   if (result instanceof Promise) {
-    await result;
+    await Promise.race([
+      result,
+      timeoutPromise()
+    ]);
   }
-}
+};
 
 const runIt = async test => {
   global.currentTest = test;
@@ -106,19 +117,26 @@ const runIt = async test => {
     await runBodyAndWait(test.body);
     invokeAfters(test);
   } catch (e) {
-    console.log('here');
-    console.log(e);
     test.errors.push(e);
   }
-  if (test.errors.length > 0) {
+  if (currentTest.errors.length > 0) {
     console.log(indent(color(`<red>✗</red> ${test.name}`)));
-    failures.push(test);
+    failures.push(currentTest);
   } else {
     successes++;
     console.log(indent(color(`<green>✓</green> ${test.name}`)));
   }
   global.currentTest = null;
 };
+
+const runItWithOpts = timeout => {
+  currentTest = {
+    ...currentTest,
+    timeoutError: new TestTimeoutError(timeout)
+  };
+}
+
+addOptionsOverride(it, 'timesOutAfter', runItWithOpts, {});
 
 const invokeAll = fnArray => fnArray.forEach(fn => fn());
 
