@@ -3,6 +3,7 @@ import fs from 'fs';
 import { color } from './colors.js';
 import { formatStackTrace } from "./stackTraceFormatter.js";
 import { runParsedBlocks } from "./testContext.js";
+import { install } from './reporters/default.js';
 
 Error.prepareStackTrace = formatStackTrace;
 
@@ -45,6 +46,7 @@ const chooseTestFiles = () =>
   isSingleFileMode() ? getSingleFilePath() : discoverTestFiles();
 
 export const run = async () => {
+  install();
   try {
     const testFilePaths = await chooseTestFiles();
     await Promise.all(testFilePaths.map(async testFilePath => {

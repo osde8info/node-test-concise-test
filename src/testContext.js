@@ -2,6 +2,7 @@ import { color } from "./colors.js";
 import * as expectModule from "./expect.js";
 import { focusedOnly } from "./focus.js";
 import { TestTimeoutError } from "./TestTimeoutError.js";
+import { dispatch } from './eventDispatcher.js';
 
 export const expect = expectModule.expect;
 
@@ -85,7 +86,7 @@ const indent = message =>
 const withoutLast = arr => arr.slice(0, -1);
 
 const runDescribe = async describe => {
-  console.log(indent(describe.name));
+  dispatch('beginningDescribe', describeStack, describe);
   describeStack = [...describeStack, describe];
   for (let i = 0; i < describe.children.length; ++i) {
     await runBlock(describe.children[i]);
