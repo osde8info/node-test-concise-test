@@ -1,9 +1,9 @@
 import path from 'path';
 import fs from 'fs';
-import { color } from './colors.js';
 import { formatStackTrace } from "./stackTraceFormatter.js";
 import { runParsedBlocks } from "./testContext.js";
 import { install } from './reporters/default.js';
+import { dispatch } from "./eventDispatcher.js";
 
 Error.prepareStackTrace = formatStackTrace;
 
@@ -52,35 +52,11 @@ export const run = async () => {
     await Promise.all(testFilePaths.map(async testFilePath => {
       await import(testFilePath);
     }));
-    const { failures, successes } = await runParsedBlocks();
-    printFailures(failures);
-    console.log(color(
-      `<green>${successes}</green> tests passed, ` +
-      `<red>${failures.length}</red> tests failed.`));
-    process.exit(failures.length > 0 ? exitCodes.failures : exitCodes.ok);
+    const failed = await runParsedBlocks();
+    dispatch("finishedTestRun");
+    process.exit(failed ? exitCodes.failures : exitCodes.ok);
   } catch(e) {
     console.error(e);
     process.exit(exitCodes.parseError);
   }
-};
-
-const fullTestDescription = ({ name, describeStack }) =>
-  [ ...describeStack, { name } ]
-      .map(({ name }) => `<bold>${name}</bold>`)
-    .join(' → ');
-
-const printFailure = failure => {
-  console.error(color(fullTestDescription(failure)));
-  failure.errors.forEach(error => {
-    console.error(error.message);
-    console.error(error.stack);
-  });
-  console.error("");
-};
-
-const printFailures = failures => {
-  if (failures.length > 0) {
-    console.error("\nFailures: \n");
-  }
-  failures.forEach(printFailure);
 };
