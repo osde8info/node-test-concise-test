@@ -50,7 +50,7 @@ export const run = async () => {
     await Promise.all(testFilePaths.map(async testFilePath => {
       await import(testFilePath);
     }));
-    const { failures, successes } = runParsedBlocks();
+    const { failures, successes } = await runParsedBlocks();
     printFailures(failures);
     console.log(color(
       `<green>${successes}</green> tests passed, ` +
