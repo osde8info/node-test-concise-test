@@ -30,7 +30,7 @@ export const install = () => {
   let failures = [];
 
   listen("beginningDescribe", (describeStack, { name }) => {
-    console.log(indent(describeStack, name));
+    console.log(indent(describeStack, color(name)));
   });
 
   listen("finishedTest", test => {
