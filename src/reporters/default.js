@@ -57,4 +57,12 @@ export const install = () => {
       `<green>${successes}</green> tests passed, ` +
       `<red>${failures.length}</red> tests failed.`));
   });
+
+  listen("skippingDescribe", (describeStack, { name }) => {
+    console.log(indent(describeStack, color(`<strike>${name}</strike>`)));
+  });
+
+  listen("skippingTest", ({ describeStack, name }) => {
+    console.log(indent(describeStack, color(`<yellow>?</yellow> <strike>${name}</strike>`)));
+  });
 };
