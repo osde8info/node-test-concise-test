@@ -1,8 +1,12 @@
-import { color } from "./colors.js";
 import * as expectModule from "./expect.js";
 import { focusedOnly } from "./focus.js";
 import { TestTimeoutError } from "./TestTimeoutError.js";
 import { dispatch } from './eventDispatcher.js';
+import {
+  registerSharedExample,
+  findSharedExample,
+  buildSharedExampleTest
+} from "./sharedExamples.js";
 
 export const expect = expectModule.expect;
 
@@ -110,9 +114,10 @@ const runBodyAndWait = async (body) => {
 const runIt = async test => {
   global.currentTest = test;
   test.describeStack = [ ...describeStack ];
+  const wrappedBody = buildSharedExampleTest(test);
   try {
     invokeBefores(test);
-    await runBodyAndWait(test.body);
+    await runBodyAndWait(wrappedBody);
     invokeAfters(test);
   } catch (e) {
     test.errors.push(e);
@@ -129,6 +134,15 @@ const runItWithOpts = timeout => {
 }
 
 addOptionsOverride(it, 'timesOutAfter', runItWithOpts, {});
+
+const behavesLike = (name, sharedContextFn) =>
+  describeWithOpts(
+    name,
+    findSharedExample(name),
+    { sharedContextFn });
+
+addOptionsOverride(it, 'behavesLike', behavesLike, {});
+addOptionsOverride(describe, 'shared', registerSharedExample);
 
 const invokeAll = fnArray => fnArray.forEach(fn => fn());
 
