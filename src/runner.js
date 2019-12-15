@@ -5,7 +5,7 @@ import { runParsedBlocks } from "./testContext.js";
 import { install } from './reporters/default.js';
 import { dispatch } from "./eventDispatcher.js";
 
-//Error.prepareStackTrace = formatStackTrace;
+Error.prepareStackTrace = formatStackTrace;
 
 const exitCodes = {
   ok: 0,
@@ -45,6 +45,12 @@ const discoverTestFiles = async () => {
 const chooseTestFiles = () =>
   isSingleFileMode() ? getSingleFilePath() : discoverTestFiles();
 
+const readRandomFlag = () => {
+  if(process.argv.find(t => t === "--randomize")) {
+    return true;
+  }
+};
+
 const readTags = () => {
   const tagArgIndex = process.argv.findIndex(t => t === "--tags");
   if (tagArgIndex > -1) {
@@ -62,7 +68,10 @@ export const run = async () => {
     await Promise.all(testFilePaths.map(async testFilePath => {
       await import(testFilePath);
     }));
-    const failed = await runParsedBlocks({ tags: readTags() });
+    const failed = await runParsedBlocks({
+      tags: readTags(),
+      shouldRandomize: readRandomFlag()
+    });
     dispatch("finishedTestRun");
     process.exit(failed ? exitCodes.failures : exitCodes.ok);
   } catch(e) {

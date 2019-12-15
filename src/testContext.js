@@ -1,6 +1,7 @@
 import * as expectModule from "./expect.js";
 import { focusedOnly } from "./focus.js";
 import { taggedOnly } from "./tags.js";
+import { randomizeBlocks } from "./randomize.js";
 import { TestTimeoutError } from "./TestTimeoutError.js";
 import { dispatch } from './eventDispatcher.js';
 import {
@@ -211,9 +212,10 @@ const anyFailed = block => {
   }
 };
 
-export const runParsedBlocks = async ({ tags }) => {
+export const runParsedBlocks = async ({ tags, shouldRandomize }) => {
   let filtered = focusedOnly(currentDescribe);
   filtered = taggedOnly(tags, filtered);
+  filtered = randomizeBlocks(shouldRandomize, filtered);
   for (let i = 0; i < filtered.children.length; ++i) {
     await runBlock(filtered.children[i]);
   }
