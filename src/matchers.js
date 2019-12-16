@@ -1,4 +1,5 @@
 import { ExpectationError } from "./ExpectationError.js";
+import { EOL } from "os";
 
 export const toBeDefined = actual => {
   if (!actual) {
@@ -18,9 +19,12 @@ export const toThrow = (source, expected) => {
     throw new ExpectationError("<source> to throw exception but it did not", { source });
   } catch (actual) {
     if (expected && actual.message !== expected.message)
-      throw new ExpectationError("<source> to throw an exception, but the thrown error message did not match the expected message.\n" +
-        "  Expected exception message: <expected>\n" +
-        "    Actual exception message: <actual>\n",
+      throw new ExpectationError("<source> to throw an exception, but the thrown error message did not match the expected message." +
+        EOL +
+        "  Expected exception message: <expected>" +
+        EOL +
+        "    Actual exception message: <actual>" +
+        EOL,
         { source, actual: actual.message, expected: expected.message });
   }
 };

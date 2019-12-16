@@ -20,7 +20,9 @@ const printFailure = failure => {
 
 const printFailures = failures => {
   if (failures.length > 0) {
-    console.error("\nFailures: \n");
+    console.error("");
+    console.error("Failures:");
+    console.error("");
   }
   failures.forEach(printFailure);
 };
