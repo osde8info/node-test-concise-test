@@ -96,18 +96,18 @@ const parseIt = (name, body, options) => {
 export const it = (name, eitherBodyOrOpts, bodyIfOpts) =>
   itWithOpts(name, eitherBodyOrOpts, bodyIfOpts);
 
-const addOptionsOverride = (object, property, fn, options) =>
+const addExtension = (object, property, fn, options) =>
   Object.defineProperty(
     object,
     property,
     { value: (...args) => fn(...args, options) }
   );
 
-addOptionsOverride(it, 'only', itWithOpts, { focus: true });
-addOptionsOverride(describe, 'only', describeWithOpts, { focus: true });
+addExtension(it, 'only', itWithOpts, { focus: true });
+addExtension(describe, 'only', describeWithOpts, { focus: true });
 
-addOptionsOverride(it, 'skip', itWithOpts, { skip: true });
-addOptionsOverride(describe, 'skip', describeWithOpts, { skip: true });
+addExtension(it, 'skip', itWithOpts, { skip: true });
+addExtension(describe, 'skip', describeWithOpts, { skip: true });
 
 export const beforeEach = body => {
   currentDescribe = {
@@ -182,7 +182,7 @@ const runItWithOpts = timeout => {
   };
 }
 
-addOptionsOverride(it, 'timesOutAfter', runItWithOpts, {});
+addExtension(it, 'timesOutAfter', runItWithOpts, {});
 
 const behavesLike = (name, sharedContextFn) =>
   describeWithOpts(
@@ -190,8 +190,8 @@ const behavesLike = (name, sharedContextFn) =>
     findSharedExample(name),
     { sharedContextFn });
 
-addOptionsOverride(it, 'behavesLike', behavesLike, {});
-addOptionsOverride(describe, 'shared', registerSharedExample);
+addExtension(it, 'behavesLike', behavesLike, {});
+addExtension(describe, 'shared', registerSharedExample);
 
 const invokeAll = fnArray => fnArray.forEach(fn => fn());
 
