@@ -144,6 +144,12 @@ You will need to import each of the functions that you use, as shown in the [Bas
 
 ## Supported matchers
 
+As you can see this is not complete; please consider helping out! These matchers are defined in `src/matchers.js` and are fairly trivial to write.
+
+There's also no way to define your own matchers.
+
+This is one area that needs to expand with priority. See the [Contributing](#contributing-to-concise-test) section below.
+
 | Matcher |
 | ------- |
 | `toBeDefined()` |
