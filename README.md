@@ -174,3 +174,5 @@ Pass the `--experimental-modules` flag to the Node runtime.
 # Contributing to `concise-test`
 
 This package is maintained and developed by [Daniel Irvine](https://github.com/dirv), and is licensed under the MIT license. I welcome all contributions, be it issues, pull requests, or just general feedback. If you're interested in getting involved with development, take a look at [the issues list](https://github.com/dirv/concise-test/issues).
+
+All contributors must abide by the [Code of Conduct](https://github.com/dirv/concise-test/blob/master/CODE_OF_CONDUCT.md).
