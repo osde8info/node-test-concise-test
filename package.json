@@ -1,6 +1,6 @@
 {
   "name": "concise-test",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A concise test runner for Node that uses ES6 modules",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
