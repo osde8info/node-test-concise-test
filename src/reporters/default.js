@@ -4,9 +4,17 @@ import { color } from "../colors.js";
 const indent = (stack, message) =>
   `${" ".repeat(stack.length * 2)}${message}`;
 
+const parseName = name => {
+  if (name instanceof Function) {
+    return name.name;
+  } else {
+    return name;
+  }
+}
+
 const fullTestDescription = ({ name, describeStack }) =>
   [ ...describeStack, { name } ]
-      .map(({ name }) => `<bold>${name}</bold>`)
+      .map(({ name }) => `<bold>${parseName(name)}</bold>`)
     .join(' → ');
 
 const printFailure = failure => {
@@ -33,9 +41,9 @@ export const install = () => {
 
   listen("beginningDescribe", (describeStack, { name, sharedContextFn }) => {
     if (sharedContextFn) {
-      console.log(indent(describeStack, color(`${name} (<cyan>shared</cyan>)`)));
+      console.log(indent(describeStack, color(`${parseName(name)} (<cyan>shared</cyan>)`)));
     } else {
-      console.log(indent(describeStack, name));
+      console.log(indent(describeStack, parseName(name)));
     }
   });
 
@@ -61,7 +69,7 @@ export const install = () => {
   });
 
   listen("skippingDescribe", (describeStack, { name }) => {
-    console.log(indent(describeStack, color(`<strike>${name}</strike>`)));
+    console.log(indent(describeStack, color(`<strike>${parseName(name)}</strike>`)));
   });
 
   listen("skippingTest", ({ describeStack, name }) => {
